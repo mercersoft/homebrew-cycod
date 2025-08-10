@@ -4,9 +4,9 @@ class Cycod < Formula
   
   # The URL to the tarball or zip of your tool's source code.
   # Replace '1.0.0' with the actual version number.
-  url "https://github.com/mercersoft/cycod/archive/refs/tags/v1.0.1.tar.gz"
-  sha256 "e49798243379383c04c83aea43d817295a70b23c56ccda7d0338c25009b90835"
-  
+  url "https://github.com/mercersoft/cycod/archive/refs/tags/v1.0.0.tar.gz"
+  sha256 "a64e202adc6846448d0b247ec501bd9874ebf00a743d0d489ccce6f02ef03a76"
+    
   # Declare the dependency on the .NET SDK.
   depends_on "dotnet"
 
