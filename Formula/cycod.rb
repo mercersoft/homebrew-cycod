@@ -1,34 +1,36 @@
 class Cycod < Formula
-  desc "CYCODEV is an AI-powered CLI toolset that brings the power of large language models to your command line interface. With CYCODEV, you can chat with AI models, create and manage custom prompts, save conversation history, and much more."
+  desc "CYCODEV is an AI-powered CLI toolset that brings LLMs to your terminal"
   homepage "https://cycoddocs100.z13.web.core.windows.net/"
-  
-  # The URL to the tarball or zip of your tool's source code.
-  # Replace '1.0.0' with the actual version number.
   url "https://github.com/mercersoft/cycod/archive/refs/tags/v1.0.0.tar.gz"
   sha256 "61c2f24de78866e47957843c45dc8adba8a7f10574c3f3faf35e500314a699a2"
+  license "MIT" # change if different
 
-  # Declare the dependency on the .NET SDK.
   depends_on "dotnet"
 
   def install
-    # These commands are executed by Homebrew to build and install your tool.
-    # `buildpath` is a Homebrew variable that points to the directory where the source code was downloaded.
-    # Change `foo/cycod.csproj` to the actual path of your project file relative to the root of your source code.
-    system "dotnet", "build", "src/cycod/cycod.csproj", "--configuration", "Release", "--output", "build_output"
-  
-    # The 'dotnet' command is now available because of the 'depends_on' line.
-    # The 'cycod' tool must be installed as a global tool.
-    system "dotnet", "tool", "install", "--global", "cycod", "--version", "1.0.0"
+    # Keep dotnet quiet and deterministic
+    ENV["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1"
+    ENV["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1"
+    ENV["DOTNET_NOLOGO"] = "1"
 
-    # The installation directory is accessible via 'prefix'.
-    # This creates a symlink to the installed tool in Homebrew's bin directory.
-    # The location of global tools is typically in the user's home directory under .dotnet/tools.
-    bin.install_symlink Dir["~/.dotnet/tools/cycod"]
+    # Restore & publish framework-dependent build into libexec
+    system "dotnet", "restore", "src/cycod/cycod.csproj"
+    system "dotnet", "publish",
+           "src/cycod/cycod.csproj",
+           "-c", "Release",
+           "-o", libexec
+
+    # Thin wrapper so `cycod` runs on PATH
+    (bin/"cycod").write <<~SH
+      #!/bin/bash
+      exec "#{Formula["dotnet"].opt_bin}/dotnet" "#{libexec}/cycod.dll" "$@"
+    SH
+    chmod 0755, bin/"cycod"
   end
 
   test do
-    # This block runs a test to ensure the tool installed correctly.
-    # Replace `cycod --version` with a command that works for your tool.
-    assert_match "cycod", shell_output("#{bin}/cycod --version")
+    # Simple smoke test; adjust if your CLI prints something else
+    output = shell_output("#{bin}/cycod --version")
+    assert_match "cycod", output
   end
 end
